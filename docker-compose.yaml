@@ -1,0 +1,52 @@
+version: '3.7'
+services:
+    php:
+        container_name: app
+        build: php8-sf6
+        networks:
+            - internal
+        ports:
+            - "9001:8000"
+        volumes:
+            - ./project:/var/www/html
+
+    mailer:
+        image: schickling/mailcatcher
+        ports:
+            - "1025:1025"
+            - "1080:1080"
+        networks:
+            - internal
+        depends_on:
+            - php
+
+    database:
+        image: postgres:13-alpine
+        networks:
+            - internal
+        environment:
+            POSTGRES_DB: app
+            POSTGRES_PASSWORD: root
+            POSTGRES_USER: symfony
+        volumes:
+            - db-data:/var/lib/postgresql/data:rw
+        ports:
+            - "5432:5432"
+
+    database_test:
+        image: postgres:13-alpine
+        environment:
+            POSTGRES_DB: app
+            POSTGRES_PASSWORD: root
+            POSTGRES_USER: root
+        volumes:
+            - db-data-test:/var/lib/postgresql/data:rw
+        ports:
+            - "5433:5432"
+volumes:
+    db-data:
+    db-data-test:
+
+networks:
+    internal:
+        driver: bridge
